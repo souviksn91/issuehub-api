@@ -1,0 +1,186 @@
+from rest_framework import serializers
+from django.contrib.auth import get_user_model
+from .models import Issue, Comment
+
+# get the currently default Django User model
+User = get_user_model()
+
+
+
+# serializer for Issue model
+class IssueSerializer(serializers.ModelSerializer):  
+    """
+    IssueSerializer is used for:
+    - creating issues
+    - updating issues (reporter only, enforced via permissions)
+    - listing issues
+    - retrieving issue details
+    """
+
+    # show reporter as username in API response
+    # ReadOnlyField means client cannot send or modify it
+    reporter = serializers.ReadOnlyField(source="reporter.username")
+
+    # allows assigning a user by sending their UUID primary key
+    # queryset used to validate the user exists
+    # required=False means it is not mandatory during creation
+    # allow_null=True means it can be empty
+    assignee = serializers.PrimaryKeyRelatedField(queryset=User.objects.all(), required=False, allow_null=True)
+
+    class Meta:
+
+        model = Issue
+
+        # fields exposed to API
+        fields = [
+            "id",
+            "title",
+            "description",
+            "reporter",
+            "assignee",
+            "status",
+            "priority",
+            "is_archived",
+            "created_at",
+            "updated_at",
+        ]
+        # fields cannot be modified
+        read_only_fields = (
+            "id",
+            "status",  # reporter cannot change status directly
+            "is_archived",  # cannot archive via normal update
+            "created_at",
+            "updated_at",
+        )
+
+    # runs when a new issue is created via POST /api/issues/
+    def create(self, validated_data):
+        # get the current user from the request context
+        request = self.context["request"]
+        # force current user to be the reporter
+        validated_data["reporter"] = request.user
+        # call the default create method to save the issue instance
+        return super().create(validated_data)
+    
+    # runs when updating an issue via PATCH /api/issues/{id}/
+    def update(self, instance, validated_data):
+        # prevent any updates if the issue is archived
+        if instance.is_archived:
+            raise serializers.ValidationError("Archived issues cannot be modified.")
+        # allow normal updates for non-archived issues
+        return super().update(instance, validated_data)
+
+
+
+
+
+class AssignIssueSerializer(serializers.Serializer):
+    """
+    Used only for assigning an issue to a user.
+    this is NOT a ModelSerializer because we only need one field.
+    """
+
+    # expect client to send assignee UUID in the request body
+    assignee_id = serializers.UUIDField()
+
+    # custom validation logic
+    def validate(self, data):
+        # get issue object from context (passed from view)
+        issue = self.context["issue"]
+
+        # prevent assigning archived issue
+        if issue.is_archived:
+            raise serializers.ValidationError("Cannot assign an archived issue.")
+        
+        # try fetching user from database
+        try:
+            user = User.objects.get(id=data["assignee_id"])
+        except User.DoesNotExist:
+            raise serializers.ValidationError("User does not exist.")
+        
+        # store actual user object for later use in view
+        data["assignee"] = user
+
+        return data
+
+
+
+
+class ChangeStatusSerializer(serializers.Serializer):
+    """
+    Used only for changing issue status.
+    """
+
+    # only allow values defined in Issue.Status choices
+    status = serializers.ChoiceField(choices=Issue.Status.choices)
+
+    def validate(self, data):
+        # get issue object from context (passed from view)
+        issue = self.context["issue"]
+
+        # prevent status change if archived
+        if issue.is_archived:
+            raise serializers.ValidationError("Cannot modify an archived issue.")
+        
+        # prevent status change if no assignee exists
+        if not issue.assignee:
+            raise serializers.ValidationError("Issue must have an assignee before changing status.")
+
+        return data
+
+
+
+class CommentSerializer(serializers.ModelSerializer):
+    """
+    Used for:
+    - creating comments
+    - updating comments
+    - listing comments
+    """
+
+    # show author's username (read-only)
+    author = serializers.ReadOnlyField(source="author.username")
+    # issue will be set automatically from view, so it's read-only here
+    issue = serializers.UUIDField(read_only=True)
+
+    class Meta:
+
+        model = Comment
+
+        fields = [
+            "id",
+            "issue",
+            "author",
+            "content",
+            "created_at",
+        ]
+        # fields cannot be modified
+        read_only_fields = (
+            "id",
+            "author",
+            "created_at",
+        )
+
+    # runs when creating a comment
+    def create(self, validated_data):
+        # get request from context to access current user
+        request = self.context["request"]
+        # get issue object from context (passed from view)
+        issue = self.context["issue"]
+
+        # prevent commenting on archived issues
+        if issue.is_archived:
+            raise serializers.ValidationError("Cannot comment on archived issue.")
+        
+        # force author to be current user
+        validated_data["author"] = request.user
+        # associate comment with the correct issue
+        validated_data["issue"] = issue
+        return super().create(validated_data)
+    
+    # runs when updating a comment
+    def update(self, instance, validated_data):
+        # prevent editing comment if issue is archived
+        if instance.issue.is_archived:
+            raise serializers.ValidationError("Cannot edit comment of archived issue.")
+        return super().update(instance, validated_data)
