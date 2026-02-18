@@ -94,14 +94,14 @@ class AssignIssueSerializer(serializers.Serializer):
         
         # try fetching user from database
         try:
-            user = User.objects.get(id=data["assignee_id"])
+            user = User.objects.get(id=data["assignee_id"])  
         except User.DoesNotExist:
             raise serializers.ValidationError("User does not exist.")
         
-        # store actual user object for later use in view
-        data["assignee"] = user
+        # set the user object as assignee in the validated data to be used in the view
+        data["assignee"] = user  
 
-        return data
+        return data  
 
 
 
@@ -164,7 +164,7 @@ class CommentSerializer(serializers.ModelSerializer):
     # runs when creating a comment
     def create(self, validated_data):
         # get request from context to access current user
-        request = self.context["request"]
+        request = self.context["request"]  # request has
         # get issue object from context (passed from view)
         issue = self.context["issue"]
 
