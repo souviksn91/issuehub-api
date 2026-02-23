@@ -70,6 +70,29 @@ class RegisterSerializer(serializers.ModelSerializer):
 
 
 
+# serializer for listing users 
+class UserListSerializer(serializers.ModelSerializer):
+    """
+    Serializer for listing users.
+    Shows only username and full name.
+    """
+    # custom field to combine first and last name 
+    full_name = serializers.SerializerMethodField()  
+
+    class Meta:
+        model = User
+        fields = ["username", "full_name"]
+
+    # method to compute full name from first and last name
+    def get_full_name(self, obj):  
+        """
+        Combine first_name and last_name.
+        """
+        return f"{obj.first_name} {obj.last_name}".strip()  
+
+
+
+
 # serializer for Issue model
 class IssueSerializer(serializers.ModelSerializer):  
     """
@@ -145,7 +168,7 @@ class AssignIssueSerializer(serializers.Serializer):
 
     # expect client to send assignee ID in the request body
     assignee_id = serializers.IntegerField()
-    
+
     # custom validation logic
     def validate(self, data):
         # get issue object from context (passed from view)

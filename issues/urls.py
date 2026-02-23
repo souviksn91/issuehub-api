@@ -2,15 +2,17 @@ from django.urls import path
 from rest_framework.routers import DefaultRouter
 from rest_framework_nested.routers import NestedDefaultRouter
 
-from .views import IssueViewSet, CommentViewSet, RegisterView
+from .views import IssueViewSet, CommentViewSet, RegisterView, UserViewSet
 
 # Main router for issues
 router = DefaultRouter()
 router.register(r'issues', IssueViewSet, basename='issue')
+router.register(r'users', UserViewSet, basename='users')
 
 # Nested router for comments under issues
 issues_router = NestedDefaultRouter(router, r'issues', lookup='issue')
 issues_router.register(r'comments', CommentViewSet, basename='issue-comments')
+
 
 # Combine both router URL patterns
 urlpatterns = router.urls + issues_router.urls

@@ -15,8 +15,10 @@ from .serializers import (
     ChangeStatusSerializer,
     CommentSerializer,
     RegisterSerializer,
+    UserListSerializer,
 )
 from .permissions import IsReporterOrReadOnly, IsCommentAuthor
+
 
 User = get_user_model()
 
@@ -50,6 +52,23 @@ class RegisterView(APIView):
             status=status.HTTP_201_CREATED
         )
 
+
+
+# USER VIEWSET
+# read-only viewset that provides list and retrieve actions for users
+# no create/update/delete allowed for users through this endpoint
+class UserViewSet(viewsets.ReadOnlyModelViewSet):  
+    """
+    Read-only endpoint to list all non-superuser users.
+    Only authenticated users can access.
+    """
+
+    serializer_class = UserListSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        # exclude superusers from the list of users
+        return User.objects.filter(is_superuser=False)
 
 
 
