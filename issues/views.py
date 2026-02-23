@@ -3,6 +3,10 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
 from django.contrib.auth import get_user_model
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.views import APIView
+from rest_framework.permissions import AllowAny
+
 
 from .models import Issue, Comment
 from .serializers import (
@@ -10,10 +14,42 @@ from .serializers import (
     AssignIssueSerializer,
     ChangeStatusSerializer,
     CommentSerializer,
+    RegisterSerializer,
 )
 from .permissions import IsReporterOrReadOnly, IsCommentAuthor
 
 User = get_user_model()
+
+
+
+# REGISTRATION API VIEW
+class RegisterView(APIView):
+    """
+    API endpoint for user registration.
+    """
+
+    # anyone can access this endpoint (even without authentication)
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+
+        # pass request data to serializer
+        serializer = RegisterSerializer(data=request.data)
+
+        # validate input data
+        serializer.is_valid(raise_exception=True)
+
+        # calls the create() method in RegisterSerializer which creates the user instance and saves it to the database
+        serializer.save()  
+
+        return Response(
+            {
+                "message": "User registered successfully.",
+                "username": serializer.data["username"]
+            },
+            status=status.HTTP_201_CREATED
+        )
+
 
 
 
@@ -40,7 +76,7 @@ class IssueViewSet(viewsets.ModelViewSet):
     serializer_class = IssueSerializer
 
     # permission class for object-level permission checks
-    permission_classes = [IsReporterOrReadOnly]
+    permission_classes = [IsAuthenticated, IsReporterOrReadOnly]  # only authenticated users can access
 
     # allows to modify the context passed to serializers 
     # (e.g. to include the current user or the issue object for custom actions)

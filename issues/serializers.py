@@ -1,9 +1,72 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import User
+
 from .models import Issue, Comment
+
 
 # get the currently default Django User model
 User = get_user_model()
+
+
+# serializer for user registration
+class RegisterSerializer(serializers.ModelSerializer):
+    """
+    Serializer for user registration.
+    """
+    # extra field for confirming password
+    password2 = serializers.CharField(write_only=True)
+
+    class Meta:
+        model = User
+
+        # fields exposed in registration
+        fields = [
+            "username",
+            "first_name",
+            "last_name",
+            "email",
+            "password",
+            "password2",
+        ]
+
+        # fields that are write-only (not returned in API responses)
+        extra_kwargs = {
+            "password": {"write_only": True}
+        }
+
+    def validate(self, data):  
+        """
+        Custom validation to check if passwords match.
+        """
+        if data["password"] != data["password2"]:
+            raise serializers.ValidationError("Passwords do not match.")
+        return data  # return the validated data to be used in create()
+    
+    # custom validation for email field to ensure uniqueness
+    def validate_email(self, value):
+        """
+        Ensure email is unique.
+        """
+        if User.objects.filter(email=value).exists():
+            raise serializers.ValidationError("Email already exists.")
+        return value
+        
+
+    def create(self, validated_data):
+        """
+        Create user properly with hashed password.
+        """
+
+        # remove password2 (not part of User model)
+        validated_data.pop("password2")
+
+        # create user using Django's create_user() method
+        # this will handle hashing the password and saving the user instance
+        user = User.objects.create_user(**validated_data)
+
+        return user  # return the created user instance to be used in the view's response if needed
+
 
 
 
@@ -80,9 +143,9 @@ class AssignIssueSerializer(serializers.Serializer):
     this is NOT a ModelSerializer because we only need one field.
     """
 
-    # expect client to send assignee UUID in the request body
-    assignee_id = serializers.UUIDField()
-
+    # expect client to send assignee ID in the request body
+    assignee_id = serializers.IntegerField()
+    
     # custom validation logic
     def validate(self, data):
         # get issue object from context (passed from view)
