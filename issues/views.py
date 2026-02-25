@@ -8,6 +8,8 @@ from rest_framework.views import APIView
 from rest_framework.permissions import AllowAny
 from drf_spectacular.utils import extend_schema
 from rest_framework.exceptions import MethodNotAllowed
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework.filters import SearchFilter, OrderingFilter
 
 
 
@@ -94,13 +96,17 @@ class IssueViewSet(viewsets.ModelViewSet):
     """
 
     # base queryset for this viewset
-    queryset = Issue.objects.all()
-
+    queryset = Issue.objects.select_related("reporter", "assignee")  # optimize queries by fetching related reporter and assignee in the same query
     # default serializer for normal CRUD operations
     serializer_class = IssueSerializer
-
     # permission class for object-level permission checks
     permission_classes = [IsAuthenticated, IsReporterOrReadOnly]  # only authenticated users can access
+
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    filterset_fields = ['status', 'priority', 'assignee', 'reporter', 'is_archived']  # allows filtering by these fields using query parameters
+    search_fields = ['title', 'description']  # allows searching by title and description
+    ordering_fields = ['created_at', 'updated_at', 'priority', 'status']  # allows ordering by these fields 
+    ordering = ['-created_at']  # default ordering by creation date descending
 
     # allows to modify the context passed to serializers 
     # (e.g. to include the current user or the issue object for custom actions)
