@@ -1,6 +1,12 @@
 # IssueHub API
 IssueHub is a backend-only Issue Tracking System built with Django REST Framework and PostgreSQL. This project focuses on backend engineering best practices without a frontend. 
 
+**What This API Does**
+IssueHub enables authenticated users to create and manage issues within a collaborative environment.
+A user who creates an issue becomes its reporter, while another user can be assigned as the assignee responsible for progressing it.
+The assignee controls status updates (open, in_progress, resolved), while the reporter manages assignment and archival.
+Users can collaborate through comments, with strict permission rules ensuring controlled and accountable workflows.
+
 It demonstrates:
 - Clean RESTful API design
 - JWT authentication
@@ -78,7 +84,7 @@ It demonstrates:
 
 2. **Create .env:**
     ```ini
-    SECRET_KEY=your_secret
+    SECRET_KEY=your_secret_key
     DEBUG=True
     DB_NAME=issuehub_db
     DB_USER=youruser

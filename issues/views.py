@@ -6,11 +6,12 @@ from django.contrib.auth import get_user_model
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
 from rest_framework.permissions import AllowAny
-from drf_spectacular.utils import extend_schema
+from drf_spectacular.utils import extend_schema, extend_schema_view
 from rest_framework.exceptions import MethodNotAllowed
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter, OrderingFilter
 from rest_framework.throttling import ScopedRateThrottle
+
 
 
 
@@ -32,6 +33,7 @@ User = get_user_model()
 
 
 # REGISTRATION API VIEW
+@extend_schema(description="Register a new user account. Username and email must be unique.")  # swagger documentation for this endpoint
 class RegisterView(APIView):
     """
     API endpoint for user registration.
@@ -87,6 +89,13 @@ class UserViewSet(viewsets.ReadOnlyModelViewSet):
 
 
 # ISSUE VIEWSET
+@extend_schema_view(
+    list=extend_schema(description="Retrieve a paginated list of issues."),
+    retrieve=extend_schema(description="Retrieve details of a specific issue."),
+    create=extend_schema(description="Create a new issue."),
+    update=extend_schema(description="Update an issue (reporter only)."),
+    partial_update=extend_schema(description="Partially update an issue (reporter only)."),
+)
 class IssueViewSet(viewsets.ModelViewSet):
     """
     This ModelViewSet automatically provides:
@@ -133,7 +142,7 @@ class IssueViewSet(viewsets.ModelViewSet):
     # -----------------------------------------
     # custom action: assign issue to a user
     # endpoint: POST /issues/{id}/assign/ (where {id} is the issue UUID)
-    @extend_schema(request=AssignIssueSerializer)  # tells Swagger that this endpoint expects input defined by AssignIssueSerializer
+    @extend_schema(request=AssignIssueSerializer, description="Assign issue to a user (reporter only).")  # tells Swagger that this endpoint expects input defined by AssignIssueSerializer
     @action(detail=True, methods=["post"])  
     def assign(self, request, pk=None):  # pk is the issue UUID from the URL
 
@@ -167,7 +176,7 @@ class IssueViewSet(viewsets.ModelViewSet):
     # -----------------------------------------
     # custom action: change status of the issue
     # endpoint: POST /issues/{id}/change_status/
-    @extend_schema(request=ChangeStatusSerializer)  # tells Swagger what input looks like for this endpoint
+    @extend_schema(request=ChangeStatusSerializer, description="Change issue status (assignee only).")  # tells Swagger what input looks like for this endpoint
     @action(detail=True, methods=["post"])
     def change_status(self, request, pk=None):
 
@@ -198,6 +207,7 @@ class IssueViewSet(viewsets.ModelViewSet):
     # -----------------------------------------
     # custom action: archive the issue
     # endpoint: POST /issues/{id}/archive/
+    @extend_schema(description="Archive an issue (reporter only).")
     @action(detail=True, methods=["post"], serializer_class=None)  # None means no input expected in request body
     def archive(self, request, pk=None):
 
@@ -228,6 +238,20 @@ class IssueViewSet(viewsets.ModelViewSet):
 
 
 # COMMENT VIEWSET
+@extend_schema_view(
+    list=extend_schema(
+        description="Retrieve paginated comments associated with a specific issue."
+    ),
+    create=extend_schema(
+        description="Add a comment to an issue. Any authenticated user can comment unless the issue is archived."
+    ),
+    partial_update=extend_schema(
+        description="Edit a comment. Only the comment author can modify their comment."
+    ),
+    destroy=extend_schema(
+        description="Delete a comment. Only the comment author can delete their comment."
+    ),
+)
 class CommentViewSet(viewsets.ModelViewSet):
     """
     Provides CRUD for comments.
