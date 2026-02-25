@@ -23,6 +23,7 @@ from .serializers import (
     UserListSerializer,
 )
 from .permissions import IsReporterOrReadOnly, IsCommentAuthor
+from .pagination import IssuePagination, UserPagination, CommentPagination
 
 
 User = get_user_model()
@@ -72,6 +73,7 @@ class UserViewSet(viewsets.ReadOnlyModelViewSet):
 
     serializer_class = UserListSerializer
     permission_classes = [IsAuthenticated]
+    pagination_class = UserPagination
 
     def get_queryset(self):
         # exclude superusers from the list of users
@@ -101,6 +103,8 @@ class IssueViewSet(viewsets.ModelViewSet):
     serializer_class = IssueSerializer
     # permission class for object-level permission checks
     permission_classes = [IsAuthenticated, IsReporterOrReadOnly]  # only authenticated users can access
+    # use custom pagination class for issues
+    pagination_class = IssuePagination  
 
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     filterset_fields = ['status', 'priority', 'assignee', 'reporter', 'is_archived']  # allows filtering by these fields using query parameters
@@ -227,9 +231,10 @@ class CommentViewSet(viewsets.ModelViewSet):
     """
     # serializer for comments
     serializer_class = CommentSerializer
-
     # permission class
     permission_classes = [IsCommentAuthor]
+    # pagination class for comments
+    pagination_class = CommentPagination
 
     def get_queryset(self):
         """
@@ -238,7 +243,9 @@ class CommentViewSet(viewsets.ModelViewSet):
         # get issue_pk from URL
         issue_id = self.kwargs.get("issue_pk")
         # filter comments by issue
-        return Comment.objects.filter(issue__id=issue_id)
+        # optimize queries by fetching related author and issue in the same query
+        return Comment.objects.filter(issue__id=issue_id).select_related("author", "issue")
+        # return Comment.objects.filter(issue__id=issue_id) 
 
     # override serializer context to include issue object when creating a comment
     def get_serializer_context(self):
