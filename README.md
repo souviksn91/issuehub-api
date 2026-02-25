@@ -72,22 +72,34 @@ Controlled business rules and permissions ensure accountability and workflow cla
 ## API Documentation Preview
 Below are selected screenshots from the Swagger documentation demonstrating core features of the API.
 
-### 1. Swagger Overview
+### Swagger Overview
 Shows structured endpoints with grouped resources and JWT authentication.
 
 ![Swagger Overview](docs/screenshots/swagger-overview.png)
 ---
 
-### 2. Create Issue (Business Logic Demonstration)
+### Create Issue (Business Logic Demonstration)
 Shows automatic reporter assignment, UUID usage, and default status handling.
 
 ![Create Issue](docs/screenshots/create-issue.png)
 ---
 
-### 3. Custom Action – Assign Issue
+### Custom Action – Assign Issue
 Demonstrates custom DRF actions enforcing business rules.
 
 ![Create Issue](docs/screenshots/assign-issue.png)
+---
+
+### Permission Enforcement Example
+Demonstrates object-level permission checks returning 403 for unauthorized actions.
+
+![Permission Denied](docs/screenshots/permission-denied.png)
+---
+
+### Nested Comments Endpoint
+Shows hierarchical issue-comment relationship with per-issue filtering and pagination.
+
+![Nested Comments](docs/screenshots/nested-comments.png)
 ---
 
 ### 4. Filtering & Pagination
