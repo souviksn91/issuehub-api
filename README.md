@@ -70,8 +70,28 @@ Controlled business rules and permissions ensure accountability and workflow cla
 - Registration endpoint: 5 requests/min
 
 ## API Documentation Preview
+Below are selected screenshots from the Swagger documentation demonstrating core features of the API.
 
-![Image](https://github.com/user-attachments/assets/01ba76c1-1470-44fe-b5c8-7aef465998fe)
+### 1. Swagger Overview
+Shows structured endpoints with grouped resources and JWT authentication.
+![Swagger Overview](docs/screenshots/swagger-overview.png)
+---
+
+### 2. Create Issue (Business Logic Demonstration)
+Shows automatic reporter assignment, UUID usage, and default status handling.
+![Create Issue](docs/screenshots/create-issue.png)
+---
+
+### 3. Custom Action – Assign Issue
+Demonstrates custom DRF actions enforcing business rules.
+![Create Issue](docs/screenshots/assign-issue.png)
+---
+
+### 4. Filtering & Pagination
+Shows paginated response structure and filtering support.
+![Filtering Example](docs/screenshots/filter-pagination.png)
+---
+
 
 
 ## Future Enhancements
