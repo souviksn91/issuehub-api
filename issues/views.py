@@ -10,6 +10,7 @@ from drf_spectacular.utils import extend_schema
 from rest_framework.exceptions import MethodNotAllowed
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter, OrderingFilter
+from rest_framework.throttling import ScopedRateThrottle
 
 
 
@@ -38,6 +39,10 @@ class RegisterView(APIView):
 
     # anyone can access this endpoint (even without authentication)
     permission_classes = [AllowAny]
+
+    # apply rate limiting to prevent abuse of registration endpoint
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = "register"
 
     @extend_schema(
         request=RegisterSerializer,  # tells Swagger what input looks like
