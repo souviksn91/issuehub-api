@@ -69,6 +69,9 @@ Controlled business rules and permissions ensure accountability and workflow cla
 - Authenticated users: 100 requests/min
 - Registration endpoint: 5 requests/min
 
+## API Documentation Preview
+
+![Image](https://github.com/user-attachments/assets/01ba76c1-1470-44fe-b5c8-7aef465998fe)
 
 
 ## Future Enhancements
