@@ -33,7 +33,7 @@ User = get_user_model()
 
 
 # REGISTRATION API VIEW
-@extend_schema(description="Register a new user account. Username and email must be unique.")  # swagger documentation for this endpoint
+@extend_schema(description="Register a new user with username, email, and passwords. Email and username must be unique.")  # swagger documentation for this endpoint
 class RegisterView(APIView):
     """
     API endpoint for user registration.
@@ -72,6 +72,7 @@ class RegisterView(APIView):
 # USER VIEWSET
 # read-only viewset that provides list and retrieve actions for users
 # no create/update/delete allowed for users through this endpoint
+@extend_schema(description="List all non-superuser users (paginated). Shows username and full name only.")
 class UserViewSet(viewsets.ReadOnlyModelViewSet):  
     """
     Read-only endpoint to list all non-superuser users.
@@ -90,11 +91,10 @@ class UserViewSet(viewsets.ReadOnlyModelViewSet):
 
 # ISSUE VIEWSET
 @extend_schema_view(
-    list=extend_schema(description="Retrieve a paginated list of issues."),
-    retrieve=extend_schema(description="Retrieve details of a specific issue."),
-    create=extend_schema(description="Create a new issue."),
-    update=extend_schema(description="Update an issue (reporter only)."),
-    partial_update=extend_schema(description="Partially update an issue (reporter only)."),
+    list=extend_schema(description="Retrieve all issues (paginated) with optional filtering, search, and ordering."),
+    retrieve=extend_schema(description="Retrieve detailed information for a specific issue by UUID."),
+    create=extend_schema(description="Create a new issue. Reporter is auto-set to the authenticated user."),
+    partial_update=extend_schema(description="Partially update an issue. Only reporter can modify."),
 )
 class IssueViewSet(viewsets.ModelViewSet):
     """
@@ -142,7 +142,7 @@ class IssueViewSet(viewsets.ModelViewSet):
     # -----------------------------------------
     # custom action: assign issue to a user
     # endpoint: POST /issues/{id}/assign/ (where {id} is the issue UUID)
-    @extend_schema(request=AssignIssueSerializer, description="Assign issue to a user (reporter only).")  # tells Swagger that this endpoint expects input defined by AssignIssueSerializer
+    @extend_schema(request=AssignIssueSerializer, description="Assign the issue to a specific user. Only the reporter can perform this.")  
     @action(detail=True, methods=["post"])  
     def assign(self, request, pk=None):  # pk is the issue UUID from the URL
 
@@ -176,7 +176,7 @@ class IssueViewSet(viewsets.ModelViewSet):
     # -----------------------------------------
     # custom action: change status of the issue
     # endpoint: POST /issues/{id}/change_status/
-    @extend_schema(request=ChangeStatusSerializer, description="Change issue status (assignee only).")  # tells Swagger what input looks like for this endpoint
+    @extend_schema(request=ChangeStatusSerializer, description="Update the status of an issue. Only the assignee can change status.")
     @action(detail=True, methods=["post"])
     def change_status(self, request, pk=None):
 
@@ -207,7 +207,7 @@ class IssueViewSet(viewsets.ModelViewSet):
     # -----------------------------------------
     # custom action: archive the issue
     # endpoint: POST /issues/{id}/archive/
-    @extend_schema(description="Archive an issue (reporter only).")
+    @extend_schema(description="Mark an issue as archived, preventing further modifications.")
     @action(detail=True, methods=["post"], serializer_class=None)  # None means no input expected in request body
     def archive(self, request, pk=None):
 
@@ -239,18 +239,10 @@ class IssueViewSet(viewsets.ModelViewSet):
 
 # COMMENT VIEWSET
 @extend_schema_view(
-    list=extend_schema(
-        description="Retrieve paginated comments associated with a specific issue."
-    ),
-    create=extend_schema(
-        description="Add a comment to an issue. Any authenticated user can comment unless the issue is archived."
-    ),
-    partial_update=extend_schema(
-        description="Edit a comment. Only the comment author can modify their comment."
-    ),
-    destroy=extend_schema(
-        description="Delete a comment. Only the comment author can delete their comment."
-    ),
+    list=extend_schema(description="List all comments for an issue (paginated)."),
+    create=extend_schema(description="Add a comment to the issue. Any authenticated user may comment."),
+    partial_update=extend_schema(description="Edit a comment. Only the author may update."),
+    destroy=extend_schema(description="Delete a comment. Only the author may delete."),
 )
 class CommentViewSet(viewsets.ModelViewSet):
     """
