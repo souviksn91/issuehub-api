@@ -6,6 +6,9 @@ from django.contrib.auth import get_user_model
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
 from rest_framework.permissions import AllowAny
+from drf_spectacular.utils import extend_schema
+from rest_framework.exceptions import MethodNotAllowed
+
 
 
 from .models import Issue, Comment
@@ -33,14 +36,16 @@ class RegisterView(APIView):
     # anyone can access this endpoint (even without authentication)
     permission_classes = [AllowAny]
 
-    def post(self, request):
+    @extend_schema(
+        request=RegisterSerializer,  # tells Swagger what input looks like
+        responses={201: None}        # response type
+    )
 
+    def post(self, request):
         # pass request data to serializer
         serializer = RegisterSerializer(data=request.data)
-
         # validate input data
         serializer.is_valid(raise_exception=True)
-
         # calls the create() method in RegisterSerializer which creates the user instance and saves it to the database
         serializer.save()  
 
@@ -104,10 +109,16 @@ class IssueViewSet(viewsets.ModelViewSet):
         context = super().get_serializer_context()
 
         return context  # return the context to send to serializers
+    
+
+    # override destroy method to prevent deletion of issues
+    def destroy(self, request, *args, **kwargs):
+        raise MethodNotAllowed("DELETE")
 
     # -----------------------------------------
     # custom action: assign issue to a user
     # endpoint: POST /issues/{id}/assign/ (where {id} is the issue UUID)
+    @extend_schema(request=AssignIssueSerializer)  # tells Swagger that this endpoint expects input defined by AssignIssueSerializer
     @action(detail=True, methods=["post"])  
     def assign(self, request, pk=None):  # pk is the issue UUID from the URL
 
@@ -141,6 +152,7 @@ class IssueViewSet(viewsets.ModelViewSet):
     # -----------------------------------------
     # custom action: change status of the issue
     # endpoint: POST /issues/{id}/change_status/
+    @extend_schema(request=ChangeStatusSerializer)  # tells Swagger what input looks like for this endpoint
     @action(detail=True, methods=["post"])
     def change_status(self, request, pk=None):
 
@@ -171,7 +183,7 @@ class IssueViewSet(viewsets.ModelViewSet):
     # -----------------------------------------
     # custom action: archive the issue
     # endpoint: POST /issues/{id}/archive/
-    @action(detail=True, methods=["post"])
+    @action(detail=True, methods=["post"], serializer_class=None)  # None means no input expected in request body
     def archive(self, request, pk=None):
 
         issue = self.get_object()
@@ -207,15 +219,20 @@ class CommentViewSet(viewsets.ModelViewSet):
     Comments are nested under issues.
     Example endpoint: POST /issues/{issue_id}/comments/
     """
-
-    # base queryset for comments
-    queryset = Comment.objects.all()
-
     # serializer for comments
     serializer_class = CommentSerializer
 
     # permission class
     permission_classes = [IsCommentAuthor]
+
+    def get_queryset(self):
+        """
+        Return only comments belonging to the specific issue.
+        """
+        # get issue_pk from URL
+        issue_id = self.kwargs.get("issue_pk")
+        # filter comments by issue
+        return Comment.objects.filter(issue__id=issue_id)
 
     # override serializer context to include issue object when creating a comment
     def get_serializer_context(self):

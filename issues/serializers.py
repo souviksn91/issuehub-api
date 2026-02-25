@@ -15,7 +15,8 @@ class RegisterSerializer(serializers.ModelSerializer):
     Serializer for user registration.
     """
     # extra field for confirming password
-    password2 = serializers.CharField(write_only=True)
+    password = serializers.CharField(write_only=True, style={'input_type': 'password'})
+    password2 = serializers.CharField(write_only=True, style={'input_type': 'password'})
 
     class Meta:
         model = User
@@ -35,6 +36,7 @@ class RegisterSerializer(serializers.ModelSerializer):
             "password": {"write_only": True}
         }
 
+
     def validate(self, data):  
         """
         Custom validation to check if passwords match.
@@ -43,6 +45,7 @@ class RegisterSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Passwords do not match.")
         return data  # return the validated data to be used in create()
     
+
     # custom validation for email field to ensure uniqueness
     def validate_email(self, value):
         """
@@ -57,14 +60,11 @@ class RegisterSerializer(serializers.ModelSerializer):
         """
         Create user properly with hashed password.
         """
-
         # remove password2 (not part of User model)
         validated_data.pop("password2")
-
         # create user using Django's create_user() method
         # this will handle hashing the password and saving the user instance
         user = User.objects.create_user(**validated_data)
-
         return user  # return the created user instance to be used in the view's response if needed
 
 
@@ -111,7 +111,8 @@ class IssueSerializer(serializers.ModelSerializer):
     # queryset used to validate the user exists
     # required=False means it is not mandatory during creation
     # allow_null=True means it can be empty
-    assignee = serializers.PrimaryKeyRelatedField(queryset=User.objects.all(), required=False, allow_null=True)
+    # assignee = serializers.PrimaryKeyRelatedField(queryset=User.objects.all(), required=False, allow_null=True)  # commented out
+    assignee = serializers.ReadOnlyField(source="assignee.username")  # updated to read-only username for better API response
 
     class Meta:
 

@@ -43,8 +43,8 @@ class Issue(models.Model):
 class Comment(models.Model):
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    issue = models.ForeignKey(Issue, on_delete=models.CASCADE, related_name="comments")
-    author = models.ForeignKey(User, on_delete=models.CASCADE, related_name="comments")
+    issue = models.ForeignKey(Issue, on_delete=models.CASCADE, related_name="comments")  # if issue is deleted, delete all its comments
+    author = models.ForeignKey(User, on_delete=models.CASCADE, related_name="comments")  # if user is deleted, delete all their comments
     content = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
 
