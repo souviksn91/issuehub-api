@@ -74,21 +74,25 @@ Below are selected screenshots from the Swagger documentation demonstrating core
 
 ### 1. Swagger Overview
 Shows structured endpoints with grouped resources and JWT authentication.
+
 ![Swagger Overview](docs/screenshots/swagger-overview.png)
 ---
 
 ### 2. Create Issue (Business Logic Demonstration)
 Shows automatic reporter assignment, UUID usage, and default status handling.
+
 ![Create Issue](docs/screenshots/create-issue.png)
 ---
 
 ### 3. Custom Action – Assign Issue
 Demonstrates custom DRF actions enforcing business rules.
+
 ![Create Issue](docs/screenshots/assign-issue.png)
 ---
 
 ### 4. Filtering & Pagination
 Shows paginated response structure and filtering support.
+
 ![Filtering Example](docs/screenshots/filter-pagination.png)
 ---
 
