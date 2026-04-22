@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<!-- Header -->
+<div class="header">
+    <div class="logo">IssueHub API</div>
+
+    <div class="button-group">
+        <a href="https://github.com/souviksn91/issuehub-api" class="btn btn-outline" target="_blank">
+            View on GitHub
+        </a>
+
+        <a href="/api/docs/" class="btn btn-solid" target="_blank">
+            Open API Docs
+        </a>
+    </div>
+</div>
+
+<div class="divider-main"></div>
+
+<!-- Intro -->
+<p class="intro">
+    IssueHub is a RESTful Issue Tracking API that allows teams to create, assign, track, and manage issues with strict role-based permissions and workflow enforcement.
+</p>
+
+<p class="paragraph">
+    IssueHub is a collaborative issue-tracking backend API where registered users can create and manage issues. A user who creates an issue becomes its reporter, and can assign another user as assignee. The assignee is responsible for updating issue status through predefined stages (open, in_progress, and resolved). All authenticated users can comment on issues, but only the comment author can edit or delete their comments. Controlled business rules and permissions ensure accountability and workflow clarity.
+</p>
+
+<!-- Demonstrates -->
+<p class="subheading">It demonstrates:</p>
+<ul>
+    <li>Clean RESTful API design</li>
+    <li>JWT authentication</li>
+    <li>Custom object-level permissions</li>
+    <li>Nested routing</li>
+    <li>Advanced filtering (status, priority, assignee, reporter)</li>
+    <li>Search & ordering</li>
+    <li>Per-view pagination</li>
+    <li>Throttling (rate limiting)</li>
+    <li>Production-aware architecture decisions</li>
+</ul>
+
+<div class="section-divider"></div>
+
+<!-- Tech Stack -->
+<p class="section-title">Tech Stack</p>
+<ul>
+    <li>Python</li>
+    <li>Django</li>
+    <li>Django REST Framework</li>
+    <li>PostgreSQL</li>
+    <li>SimpleJWT (JWT authentication)</li>
+    <li>drf-spectacular (Swagger documentation)</li>
+</ul>
+
+<div class="section-divider"></div>
+
+<!-- Core Features -->
+<p class="section-title">Core Features</p>
+
+<p class="subheading">User System:</p>
+<ul>
+    <li>User registration with password confirmation</li>
+    <li>Unique username and email validation</li>
+    <li>Read-only user listing (excluding superusers)</li>
+    <li>JWT authentication</li>
+    <li>Rate-limited registration endpoint</li>
+</ul>
+
+<p class="subheading">Issue Management:</p>
+<ul>
+    <li>UUID primary key</li>
+    <li>Title & description</li>
+    <li>Reporter (auto-set)</li>
+    <li>Single assignee</li>
+    <li>Status (open, in_progress, and resolved)</li>
+    <li>Priority (low, medium, high)</li>
+    <li>Archive (soft freeze)</li>
+    <li>Created & updated timestamps</li>
+    <li>Only reporter can edit or assign</li>
+    <li>Only assignee can change status</li>
+    <li>Status cannot change without assignee</li>
+    <li>Archived issues are read-only</li>
+</ul>
+
+<p class="subheading">Comment System:</p>
+<ul>
+    <li>Nested under issues</li>
+    <li>Only comment author can edit/delete</li>
+    <li>Comments blocked if issue is archived</li>
+    <li>Paginated separately</li>
+</ul>
+
+<p class="subheading">Advanced Query and Pagination Support:</p>
+<ul>
+    <li>Filtering</li>
+    <li>Search</li>
+    <li>Ordering</li>
+    <li>Custom paginations</li>
+</ul>
+
+<p class="subheading">Throttling:</p>
+<ul>
+    <li>Scoped throttling</li>
+    <li>Anonymous: 20 requests/min</li>
+    <li>Authenticated users: 100 requests/min</li>
+    <li>Registration endpoint: 5 requests/min</li>
+</ul>
+
+<p class="subheading">Permissions:</p>
+<ul>
+    <li>Reporter can edit, assign, archive</li>
+    <li>Assignee can change status</li>
+    <li>Authenticated users can comment</li>
+    <li>Archived issues are read-only</li>
+</ul>
+
+<div class="section-divider"></div>
+
+<!-- How to Test -->
+<p class="section-title">How to Test</p>
+<ol>
+    <li>Register a user (/api/register/)</li>
+    <li>Login (/api/token/)</li>
+    <li>Click “Authorize” in Swagger</li>
+    <li>Use Bearer token</li>
+    <li>Start testing endpoints</li>
+</ol>
+
+<!-- Footer -->
+<div class="footer">
+    <p class="footer-text">
+        Created by <span class="footer-name">Souvik Sinha</span>
+    </p>
+</div>
+
+{% endblock %}
